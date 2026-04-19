@@ -1,0 +1,29 @@
+# Ocean Hazard Project Overview
+
+This is a breakdown of the overall project structure, focusing on the root data pipelines, configuration files, and key component directories.
+
+## Core System & Documentation
+- **[README.md](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/README.md)**: Provides high-level instructions on the Ocean Hazard Reporting Platform microservices architecture and how to run it via Docker Compose.
+- **[system_architecture.md](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/system_architecture.md)**: A detailed design document explaining the polyglot data layer (PostgreSQL, TimescaleDB, Redis), Kafka event streaming, NLP processing, and spatial queries.
+- **[docker-compose.yml](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/docker-compose.yml)**: Defines the 9 Docker containers required to run the platform (zookeeper, kafka, postgres, timescaledb, redis, api-gateway, nlp-service, pipeline-service, alert-service, frontend).
+- **[.env.example](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/.env.example)**: Environment variable template holding configurations for databases, alert services, and API keys.
+
+## Database
+- **[database_schema.sql](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/database_schema.sql)**: The primary PostGIS schema for the PostgreSQL database. It defines tables for users, hazard_categories, hazard_reports (with spatial geometry), social_media_posts, report_corroborations, alert_rules, and triggered_alerts. It heavily utilizes spatial indexes (`GIST`) for finding hazards by geolocation.
+
+## Data Pipelines (Python)
+- **[master_pipeline.py](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/master_pipeline.py)**: A master script that coordinates and runs all the data fetchers ([reddit](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/master_pipeline.py#7-11), [scraper](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/master_pipeline.py#12-22), [noaa](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/master_pipeline.py#23-33), [rss](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/master_pipeline.py#34-42)) concurrently using background threads and the `schedule` library.
+- **[scraper_pipeline.py](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/scraper_pipeline.py)**: A script that scrapes forums like Cruisers Forum and Windy Community to extract unstructured text about extreme weather and navigational hazards.
+- **[reddit_pipeline.py](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/reddit_pipeline.py)**: Streams posts from relevant subreddits (OceanConservation, Sailing, HeavySeas) looking for hazard mentions.
+- **[rss_pipeline.py](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/rss_pipeline.py)**: Parses official RSS feeds like Tsunami warnings and Global Disaster Alerts (GDACS) for marine hazards.
+- **[noaa_pipeline.py](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/noaa_pipeline.py)**: Fetches marine weather alerts and NDBC buoy data directly from NOAA APIs to track rough seas and rogue waves.
+
+## Core Intelligence Engines (Python)
+- **[alert_engine.py](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/alert_engine.py)**: A background job that runs every 60 seconds. It fetches recent reports from the database and runs them against spatial and logical rules (e.g., if 3 high-severity reports are within 20km, trigger a Cluster Alert; or if report volume jumps 300% in a grid, trigger an Escalation Alert). It deduplicates and routes alerts via Email, SMS, Push, or Slack.
+- **[trust_scorer.py](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/trust_scorer.py)**: Contains the logic ([calculate_trust_score](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/trust_scorer.py#27-101)) to evaluate how reliable a hazard report is. It combines reporter credibility, corroborations from other users, NLP model confidence, and cross-checks against NOAA/Copernicus weather data to yield a final 0-100 Trust Score.
+
+## Microservices (Directories)
+- **`api/`**: The main working backend API written in TypeScript/Node.js. It connects to the Postgres database (`src/db.ts`) and handles frontend requests.
+- **`dashboard/`**: The modern frontend user interface, built with React, Vite, and Tailwind CSS. It visualizes the hazard maps and live report feeds.
+- **`mobile_app/`**: Contains the codebase for mobile clients to submit hazards on-the-go.
+- **`api-gateway/`, `nlp-service/`, `pipeline-service/`, `alert-service/`, `frontend/`**: These folders currently act as Docker container stubs (containing standard [Dockerfile](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/frontend/Dockerfile) and dependency lists like [package.json](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/api/package.json) or [requirements.txt](file:///c:/Users/Gaurav%20Nevarekar/Desktop/croudsouce%20open%20hazar/requirements.txt)) that are initialized when `docker-compose up` is run.

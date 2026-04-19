@@ -1,0 +1,5 @@
+praw
+schedule
+beautifulsoup4
+requests
+feedparser
