@@ -100,6 +100,7 @@ services:
       - TIMESCALEDB_USER=${TIMESCALEDB_USER:-postgres}
       - TIMESCALEDB_PASSWORD=${TIMESCALEDB_PASSWORD:-password}
       - TIMESCALEDB_DB=${TIMESCALEDB_DB:-ocean_timeseries}
+      - API_URL=http://api-gateway:3000/api/reports
     depends_on:
       - kafka
       - timescaledb
@@ -130,7 +131,7 @@ services:
     build:
       context: ./frontend
     ports:
-      - "5173:5173"
+      - "5174:8080"
     environment:
       - VITE_API_URL=http://localhost:3000
     networks:

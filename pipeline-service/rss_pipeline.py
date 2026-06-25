@@ -3,10 +3,11 @@ import feedparser
 import requests
 import time
 from html.parser import HTMLParser
+import os
 
 logger = logging.getLogger(__name__)
 
-API_URL = "http://localhost:3000/api/reports"
+API_URL = os.getenv("API_URL", "http://localhost:3000/api/reports")
 
 RSS_FEEDS = [
     "https://www.tsunami.gov/events/xml/world_events.xml", # Tsunami warnings

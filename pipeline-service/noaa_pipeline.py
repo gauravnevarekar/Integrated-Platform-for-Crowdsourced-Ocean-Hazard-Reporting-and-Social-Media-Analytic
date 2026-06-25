@@ -1,10 +1,11 @@
 import logging
 import requests
 import time
+import os
 
 logger = logging.getLogger(__name__)
 
-API_URL = "http://localhost:3000/api/reports"
+API_URL = os.getenv("API_URL", "http://localhost:3000/api/reports")
 
 def post_hazard_to_api(hazard_data):
     try:
